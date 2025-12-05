@@ -24,9 +24,15 @@ export const useAuthStore = create<AuthState>()(
                 set({ user, token, isAuthenticated: true });
             },
             register: async (data) => {
-                const response = await authService.register(data);
-                localStorage.setItem('token', response.token);
-                set({ user: response.user, token: response.token, isAuthenticated: true });
+                // Register the user (backend doesn't return token)
+                await authService.register(data);
+                // Automatically log in to get the token
+                const loginResponse = await authService.login({
+                    email: data.email,
+                    password: data.password,
+                });
+                localStorage.setItem('token', loginResponse.token);
+                set({ user: loginResponse.user, token: loginResponse.token, isAuthenticated: true });
             },
             logout: () => {
                 localStorage.removeItem('token');
