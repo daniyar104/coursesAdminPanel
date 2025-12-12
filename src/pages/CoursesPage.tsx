@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, Button, Drawer, Form, Input, Select, Space, Typography, message, Popconfirm, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 import { useCourseStore } from '../store/courseStore';
 import { useCategoryStore } from '../store/categoryStore';
 import type { Course } from '../types';
@@ -11,6 +12,7 @@ const { TextArea } = Input;
 
 const CoursesPage: React.FC = () => {
     const navigate = useNavigate();
+    const { user } = useAuthStore();
     const { courses, loading, fetchCourses, createCourse, updateCourse, deleteCourse } = useCourseStore();
     const { categories, fetchCategories } = useCategoryStore();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -21,6 +23,20 @@ const CoursesPage: React.FC = () => {
         fetchCourses();
         fetchCategories();
     }, []);
+
+    // Filter courses for non-admin users (teachers)
+    const filteredCourses = React.useMemo(() => {
+        if (!user || user.role === 'admin') {
+            return courses;
+        }
+
+        // For teachers/others, filter by teacher_id
+        return courses.filter(course => {
+            // Check both snake_case and camelCase just in case, and normalize IDs
+            const courseTeacherId = course.teacher_id || (course as any).teacherId || (course as any).userId;
+            return String(courseTeacherId) === String(user.id);
+        });
+    }, [courses, user]);
 
     const handleCreate = () => {
         setEditingCourse(null);
@@ -55,7 +71,9 @@ const CoursesPage: React.FC = () => {
                 await updateCourse(editingCourse.id, values);
                 message.success('Курс обновлен');
             } else {
-                const newCourse = await createCourse(values);
+                // Add teacher_id explicitly if backend doesn't infer it (safety)
+                const courseData = { ...values, teacher_id: user?.id };
+                const newCourse = await createCourse(courseData);
                 message.success('Курс создан');
                 navigate(`/courses/${newCourse.id}`);
             }
@@ -156,7 +174,7 @@ const CoursesPage: React.FC = () => {
 
             <Table
                 columns={columns}
-                dataSource={courses}
+                dataSource={filteredCourses}
                 rowKey="id"
                 loading={loading}
                 pagination={{ pageSize: 10 }}

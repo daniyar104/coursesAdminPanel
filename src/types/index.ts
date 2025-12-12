@@ -56,6 +56,7 @@ export interface Course {
     category_id: string;
     created_at: Date;
     updated_at: Date;
+    teacher_id?: string;
     categories?: Category;
     _count?: {
         modules: number;
