@@ -56,7 +56,7 @@ export interface Course {
     category_id: string;
     created_at: Date;
     updated_at: Date;
-    teacher_id?: string;
+    userId?: string;
     categories?: Category;
     _count?: {
         modules: number;
@@ -72,7 +72,6 @@ export interface CreateCourseDto {
     full_description?: string;
     difficulty_level?: string;
     category_id: string;
-    teacher_id?: string;
 }
 
 export interface UpdateCourseDto {

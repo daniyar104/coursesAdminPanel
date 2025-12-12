@@ -13,16 +13,20 @@ const { TextArea } = Input;
 const CoursesPage: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { courses, loading, fetchCourses, createCourse, updateCourse, deleteCourse } = useCourseStore();
+    const { courses, loading, error, fetchCourses, createCourse, updateCourse, deleteCourse } = useCourseStore();
     const { categories, fetchCategories } = useCategoryStore();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [editingCourse, setEditingCourse] = useState<Course | null>(null);
     const [form] = Form.useForm();
 
     useEffect(() => {
-        fetchCourses();
+        fetchCourses().catch(err => console.error("Fetch courses failed:", err));
         fetchCategories();
     }, []);
+
+    if (error) {
+        return <div style={{ color: 'red', padding: 20 }}>Error loading courses: {error}</div>;
+    }
 
     // Filter courses for non-admin users (teachers)
     const filteredCourses = React.useMemo(() => {
@@ -32,12 +36,11 @@ const CoursesPage: React.FC = () => {
 
         console.log('Filtering courses for teacher:', user.id);
 
-        // For teachers/others, filter by teacher_id
+        // For teachers/others, filter by userId
         return courses.filter(course => {
-            // Check both snake_case and camelCase just in case, and normalize IDs
-            const courseTeacherId = course.teacher_id || (course as any).teacherId || (course as any).userId;
-            console.log(`Course: ${course.title}, Teacher ID: ${courseTeacherId}`);
-            return String(courseTeacherId) === String(user.id);
+            const ownerId = course.userId || (course as any).teacher_id || (course as any).teacherId;
+            // console.log(`Course: ${course.title}, Owner ID: ${ownerId}`);
+            return String(ownerId) === String(user.id);
         });
     }, [courses, user]);
 
@@ -74,8 +77,8 @@ const CoursesPage: React.FC = () => {
                 await updateCourse(editingCourse.id, values);
                 message.success('Курс обновлен');
             } else {
-                // Add teacher_id explicitly if backend doesn't infer it (safety)
-                const newCourse = await createCourse({ ...values, teacher_id: user?.id });
+                // Backend should infer teacher from token
+                const newCourse = await createCourse({ ...values });
                 message.success('Курс создан');
                 navigate(`/courses/${newCourse.id}`);
             }
@@ -173,6 +176,17 @@ const CoursesPage: React.FC = () => {
                     Создать курс
                 </Button>
             </div>
+
+            {/* Debug info for troubleshooting */}
+            {user?.role !== 'admin' && courses.length > 0 && filteredCourses.length === 0 && (
+                <div style={{ marginBottom: 16, padding: 12, background: '#fff2f0', border: '1px solid #ffccc7', borderRadius: 8 }}>
+                    <Typography.Text type="danger">
+                        Debug: Found {courses.length} courses but none match your User ID ({user?.id}).
+                        <br />
+                        First course userId: {JSON.stringify(courses[0].userId)}
+                    </Typography.Text>
+                </div>
+            )}
 
             <Table
                 columns={columns}
