@@ -13,7 +13,12 @@ export const courseService = {
     },
 
     createCourse: async (data: CreateCourseDto): Promise<{ message: string; course: Course }> => {
-        const response = await api.post<{ message: string; course: Course }>('/admin/courses', data);
+        const token = localStorage.getItem('token');
+        const response = await api.post<{ message: string; course: Course }>('/admin/courses', data, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         return response.data;
     },
 
