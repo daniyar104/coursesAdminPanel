@@ -72,8 +72,7 @@ const CoursesPage: React.FC = () => {
                 message.success('Курс обновлен');
             } else {
                 // Add teacher_id explicitly if backend doesn't infer it (safety)
-                const courseData = { ...values, teacher_id: user?.id };
-                const newCourse = await createCourse(courseData);
+                const newCourse = await createCourse(values);
                 message.success('Курс создан');
                 navigate(`/courses/${newCourse.id}`);
             }
