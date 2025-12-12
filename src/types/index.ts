@@ -72,6 +72,7 @@ export interface CreateCourseDto {
     full_description?: string;
     difficulty_level?: string;
     category_id: string;
+    teacher_id?: string;
 }
 
 export interface UpdateCourseDto {

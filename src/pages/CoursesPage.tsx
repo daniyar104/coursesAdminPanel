@@ -30,10 +30,13 @@ const CoursesPage: React.FC = () => {
             return courses;
         }
 
+        console.log('Filtering courses for teacher:', user.id);
+
         // For teachers/others, filter by teacher_id
         return courses.filter(course => {
             // Check both snake_case and camelCase just in case, and normalize IDs
             const courseTeacherId = course.teacher_id || (course as any).teacherId || (course as any).userId;
+            console.log(`Course: ${course.title}, Teacher ID: ${courseTeacherId}`);
             return String(courseTeacherId) === String(user.id);
         });
     }, [courses, user]);
@@ -72,7 +75,7 @@ const CoursesPage: React.FC = () => {
                 message.success('Курс обновлен');
             } else {
                 // Add teacher_id explicitly if backend doesn't infer it (safety)
-                const newCourse = await createCourse(values);
+                const newCourse = await createCourse({ ...values, teacher_id: user?.id });
                 message.success('Курс создан');
                 navigate(`/courses/${newCourse.id}`);
             }
