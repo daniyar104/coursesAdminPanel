@@ -24,7 +24,9 @@ import {
     ArrowLeftOutlined,
     MenuOutlined,
     UploadOutlined,
+    CodeOutlined,
 } from '@ant-design/icons';
+import { PracticeManager } from '../components/PracticeManager';
 import { useLessonStore } from '../store/lessonStore';
 import { useCourseStore } from '../store/courseStore';
 import { useModuleStore } from '../store/moduleStore';
@@ -55,9 +57,10 @@ interface SortableLessonItemProps {
     onEdit: (lesson: Lesson) => void;
     onDelete: (id: string) => void;
     onUpload: (id: string, file: File) => Promise<void>;
+    onManagePractices: (lessonId: string) => void;
 }
 
-const SortableLessonItem: React.FC<SortableLessonItemProps> = ({ lesson, onEdit, onDelete, onUpload }) => {
+const SortableLessonItem: React.FC<SortableLessonItemProps> = ({ lesson, onEdit, onDelete, onUpload, onManagePractices }) => {
     const {
         attributes,
         listeners,
@@ -77,6 +80,9 @@ const SortableLessonItem: React.FC<SortableLessonItemProps> = ({ lesson, onEdit,
                 actions={[
                     <Button type="link" icon={<EditOutlined />} onClick={() => onEdit(lesson)}>
                         Изменить
+                    </Button>,
+                    <Button type="link" icon={<CodeOutlined />} onClick={() => onManagePractices(lesson.id)}>
+                        Практики
                     </Button>,
                     <Popconfirm
                         title="Удалить урок?"
@@ -181,6 +187,8 @@ const ModuleLessonsPage: React.FC = () => {
     const { lessons, loading, fetchLessons, createLesson, updateLesson, deleteLesson, reorderLesson, uploadMaterial } = useLessonStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+    const [practiceDrawerOpen, setPracticeDrawerOpen] = useState(false);
+    const [selectedLessonForPractice, setSelectedLessonForPractice] = useState<string | null>(null);
     const [form] = Form.useForm();
 
     const sensors = useSensors(
@@ -290,14 +298,14 @@ const ModuleLessonsPage: React.FC = () => {
                     <a onClick={() => navigate('/courses')}>Курсы</a>
                 </Breadcrumb.Item>
                 <Breadcrumb.Item>
-                    <a onClick={() => navigate(`/ courses / ${courseId} `)}>{currentCourse.title}</a>
+                    <a onClick={() => navigate(`/courses/${courseId}`)}>{currentCourse.title}</a>
                 </Breadcrumb.Item>
                 <Breadcrumb.Item>{currentModule.title}</Breadcrumb.Item>
             </Breadcrumb>
 
             <Button
                 icon={<ArrowLeftOutlined />}
-                onClick={() => navigate(`/ courses / ${courseId} `)}
+                onClick={() => navigate(`/courses/${courseId}`)}
                 style={{ marginBottom: 16 }}
             >
                 Назад к модулям
@@ -326,6 +334,10 @@ const ModuleLessonsPage: React.FC = () => {
                                         onEdit={handleEdit}
                                         onDelete={handleDelete}
                                         onUpload={handleUpload}
+                                        onManagePractices={(id) => {
+                                            setSelectedLessonForPractice(id);
+                                            setPracticeDrawerOpen(true);
+                                        }}
                                     />
                                 )}
                             />
@@ -381,6 +393,17 @@ const ModuleLessonsPage: React.FC = () => {
                     </Form.Item>
                 </Form>
             </Modal>
+
+            {selectedLessonForPractice && (
+                <PracticeManager
+                    lessonId={selectedLessonForPractice}
+                    open={practiceDrawerOpen}
+                    onClose={() => {
+                        setPracticeDrawerOpen(false);
+                        setSelectedLessonForPractice(null);
+                    }}
+                />
+            )}
         </div>
     );
 };

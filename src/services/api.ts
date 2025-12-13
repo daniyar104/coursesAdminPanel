@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
     headers: {
@@ -31,9 +32,19 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            // Handle unauthorized access
+        const errorMessage = error.response?.data?.message || '';
+        const status = error.response?.status;
+
+        // Handle unauthorized access or "User/Teacher not found" scenarios (zombie token)
+        if (
+            status === 401 ||
+            ((status === 404 || status === 400) &&
+                (errorMessage.includes('Teacher with ID') ||
+                    errorMessage.includes('User with ID') ||
+                    errorMessage.includes('User not found')))
+        ) {
             localStorage.removeItem('token');
+            localStorage.removeItem('auth-storage');
             window.location.href = '/login';
         }
         return Promise.reject(error);

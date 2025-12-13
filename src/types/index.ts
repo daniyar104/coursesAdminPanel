@@ -287,6 +287,8 @@ export interface TestResult {
     completedAt: Date;
 }
 
+
+
 // ============= API Response Types =============
 export interface ApiResponse<T> {
     data?: T;
@@ -298,3 +300,30 @@ export interface ApiError {
     message: string;
     statusCode?: number;
 }
+
+// ============= Practice Types =============
+export interface Practice {
+    id: string;
+    lessonId: string;
+    title: string;
+    description?: string;
+    language?: string;
+    initial_code?: string;
+    expected_output?: string;
+    test_cases?: any;
+    solution_code?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export interface CreatePracticeDto {
+    title: string;
+    description?: string;
+    language?: string;
+    initial_code?: string;
+    expected_output?: string;
+    test_cases?: any;
+    solution_code?: string;
+}
+
+export interface UpdatePracticeDto extends Partial<CreatePracticeDto> { }
